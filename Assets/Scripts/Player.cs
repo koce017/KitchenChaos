@@ -13,10 +13,28 @@ public class Player : MonoBehaviour
     private bool isWalking;
     private Vector3 lastInteractDir;
 
+    private void Start()
+    {
+        gameInput.OnInteractAction += GameInput_OnInteractAction;
+    }
+
+    private void GameInput_OnInteractAction(object sender, System.EventArgs e)
+    {
+        var inputVector = gameInput.GetMovementVector();
+        var moveDir = new Vector3(inputVector.x, 0f, inputVector.y).normalized;
+
+        if (moveDir != Vector3.zero)
+            lastInteractDir = moveDir;
+
+        if (Physics.Raycast(transform.position, lastInteractDir, out var hit, interactDistance, counterLayerMask))
+        {
+            hit.transform.GetComponent<ClearCounter>()?.Interact();
+        }
+    }
+
     private void Update()
     {
         HandleMovement();
-        HandleInteractions();
     }
 
     private void HandleMovement()
@@ -25,20 +43,6 @@ public class Player : MonoBehaviour
         isWalking = moveDir != Vector3.zero;
         transform.position += moveSpeed * Time.deltaTime * moveDir;
         transform.forward = Vector3.Slerp(transform.forward, moveDir, rotateSpeed * Time.deltaTime);
-    }
-
-    private void HandleInteractions()
-    {
-        var inputVector = gameInput.GetMovementVector();
-        var moveDir = new Vector3(inputVector.x, 0f, inputVector.y).normalized;
-
-        if (moveDir != Vector3.zero )
-            lastInteractDir = moveDir;
-
-        if (Physics.Raycast(transform.position, lastInteractDir, out var hit, interactDistance, counterLayerMask))
-        {
-            hit.transform.GetComponent<ClearCounter>()?.Interact();
-        }
     }
 
     private Vector3 GetMovementDirection()
